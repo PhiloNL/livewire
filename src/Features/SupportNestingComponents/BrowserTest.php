@@ -37,6 +37,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSee('First Component Rendered')
             ->assertDontSee('Second Component Rendered')
             ->assertSee('Third Component Rendered')
+
+            ->waitForLivewire()->click('@remove-first')
+            ->assertDontSee('First Component Rendered')
+            ->assertDontSee('Second Component Rendered')
+            ->assertSee('Third Component Rendered')
             ;
     }
 }
@@ -62,7 +67,9 @@ class Page extends Component
             <div>Page</div>
 
             @foreach(\$components as \$component => \$params)
-                @livewire(\$component, \$params, key(\$component))
+                <div>
+                    @livewire(\$component, \$params, key(\$component))
+                </div>
             @endforeach
 
             <div>
