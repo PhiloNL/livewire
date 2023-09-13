@@ -17,6 +17,8 @@ export class Component {
 
         this.snapshotEncoded = el.getAttribute('wire:snapshot')
 
+        this.scripts = JSON.parse(el.getAttribute('wire:scripts'))
+
         this.snapshot = JSON.parse(this.snapshotEncoded)
 
         if (! this.snapshot) {

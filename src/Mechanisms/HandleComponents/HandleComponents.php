@@ -72,6 +72,7 @@ class HandleComponents
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:snapshot' => $snapshot,
             'wire:effects' => $context->effects,
+            'wire:scripts' => $component->getScripts(),
         ]);
 
         $this->popOffComponentStack();

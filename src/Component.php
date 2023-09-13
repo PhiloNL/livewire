@@ -6,6 +6,7 @@ use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButton
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
 use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
 use Livewire\Features\SupportAttributes\HandlesAttributes;
+use Livewire\Features\SupportScripts\HandlesScripts;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
@@ -23,6 +24,7 @@ abstract class Component
     use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
+    use HandlesScripts;
     use HandlesRedirects;
     use HandlesStreaming;
     use HandlesAttributes;

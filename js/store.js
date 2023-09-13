@@ -3,11 +3,26 @@ import { trigger } from "@/events";
 import { deepClone } from "@/utils"
 
 let components = {}
+let scripts = {}
 
 export function initComponent(el) {
     let component = new Component(el)
 
     if (components[component.id]) throw 'Component already registered'
+
+    component.scripts.filter(s => !scripts[s]).forEach(script => {
+        const scriptElement = document.createElement('script');
+
+        if (script?.endsWith('.js')) {
+            scriptElement.src = script;
+        } else {
+            scriptElement.textContent = script;
+        }
+
+        document.body.appendChild(scriptElement);
+
+        scripts[script] = true;
+    });
 
     let cleanup = (i) => component.addCleanup(i)
 
