@@ -1550,17 +1550,21 @@ var require_module_cjs = __commonJS({
       observer.disconnect();
       currentlyObserving = false;
     }
-    var queuedMutations = [];
+    var recordQueue = [];
+    var willProcessRecordQueue = false;
     function flushObserver() {
-      let records = observer.takeRecords();
-      queuedMutations.push(() => records.length > 0 && onMutate(records));
-      let queueLengthWhenTriggered = queuedMutations.length;
-      queueMicrotask(() => {
-        if (queuedMutations.length === queueLengthWhenTriggered) {
-          while (queuedMutations.length > 0)
-            queuedMutations.shift()();
-        }
-      });
+      recordQueue = recordQueue.concat(observer.takeRecords());
+      if (recordQueue.length && !willProcessRecordQueue) {
+        willProcessRecordQueue = true;
+        queueMicrotask(() => {
+          processRecordQueue();
+          willProcessRecordQueue = false;
+        });
+      }
+    }
+    function processRecordQueue() {
+      onMutate(recordQueue);
+      recordQueue.length = 0;
     }
     function mutateDom(callback) {
       if (!currentlyObserving)
@@ -2941,31 +2945,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_ids[name])
         el._x_ids[name] = findAndIncrementId(name);
     }
-    magic("id", (el, { cleanup: cleanup2 }) => (name, key = null) => {
-      let cacheKey = `${name}${key ? `-${key}` : ""}`;
-      return cacheIdByNameOnElement(el, cacheKey, cleanup2, () => {
-        let root = closestIdRoot(el, name);
-        let id = root ? root._x_ids[name] : findAndIncrementId(name);
-        return key ? `${name}-${id}-${key}` : `${name}-${id}`;
-      });
+    magic("id", (el) => (name, key = null) => {
+      let root = closestIdRoot(el, name);
+      let id = root ? root._x_ids[name] : findAndIncrementId(name);
+      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
     });
-    interceptClone((from, to) => {
-      if (from._x_id) {
-        to._x_id = from._x_id;
-      }
-    });
-    function cacheIdByNameOnElement(el, cacheKey, cleanup2, callback) {
-      if (!el._x_id)
-        el._x_id = {};
-      if (el._x_id[cacheKey])
-        return el._x_id[cacheKey];
-      let output = callback();
-      el._x_id[cacheKey] = output;
-      cleanup2(() => {
-        delete el._x_id[cacheKey];
-      });
-      return output;
-    }
     magic("el", (el) => el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3721,11 +3705,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive2("id", (el, { expression }, { evaluate: evaluate2 }) => {
       let names = evaluate2(expression);
       names.forEach((name) => setIdRoot(el, name));
-    });
-    interceptClone((from, to) => {
-      if (from._x_ids) {
-        to._x_ids = from._x_ids;
-      }
     });
     mapAttributes(startingWith("@", into(prefix("on:"))));
     directive2("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup2 }) => {
@@ -6967,7 +6946,7 @@ var require_module_cjs8 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -6994,12 +6973,8 @@ var require_module_cjs8 = __commonJS({
           if (el._x_model)
             el._x_model.set(el.value);
         });
-        const controller = new AbortController();
-        cleanup2(() => {
-          controller.abort();
-        });
-        el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
-        el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
+        el.addEventListener("input", () => processInputValue(el));
+        el.addEventListener("blur", () => processInputValue(el, false));
         function processInputValue(el2, shouldRestoreCursor = true) {
           let input = el2.value;
           let template = templateFn(input);
